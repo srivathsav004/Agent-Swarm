@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { inject } from '@vercel/analytics';
 import Hero from './components/LandingPage/Hero';
 import HowItWorks from './components/LandingPage/HowItWorks';
 import PaymentFlow from './components/LandingPage/PaymentFlow';
@@ -43,5 +44,7 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+inject();
 
 export default App;

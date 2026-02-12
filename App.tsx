@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { inject } from '@vercel/analytics';
 import Hero from './LandingPage/Hero';
 import HowItWorks from './LandingPage/HowItWorks';
@@ -7,8 +8,9 @@ import PaymentFlow from './LandingPage/PaymentFlow';
 import TechStack from './LandingPage/TechStack';
 import Comparison from './LandingPage/Comparison';
 import Footer from './LandingPage/Footer';
+import Demo from './demo/Demo';
 
-const App: React.FC = () => {
+const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen selection:bg-[#00FF94] selection:text-[#0A0A0A]">
       <nav className="fixed top-0 left-0 w-full z-50 border-b border-[#333333] bg-[#0A0A0A]/80 backdrop-blur-md px-6 py-4 flex justify-between items-center">
@@ -26,9 +28,12 @@ const App: React.FC = () => {
           <button className="bg-[#0A0A0A] border border-[#333333] px-4 py-2 text-xs uppercase tracking-widest hover:border-[#F5F5F5] hover:bg-[#1A1A1A] transition-all text-[#F5F5F5]">
             DOCS
           </button>
-          <button className="bg-[#FF6B35] px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 hover:opacity-80 transition-opacity text-[#0A0A0A] font-bold">
+          <a 
+            href="/demo" 
+            className="bg-[#FF6B35] px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 hover:opacity-80 transition-opacity text-[#0A0A0A] font-bold"
+          >
             LAUNCH DEMO <span className="text-lg leading-none">→</span>
-          </button>
+          </a>
         </div>
       </nav>
 
@@ -42,6 +47,17 @@ const App: React.FC = () => {
 
       <Footer />
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/demo" element={<Demo />} />
+      </Routes>
+    </Router>
   );
 };
 

@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import IsometricFlow from "./IsometricFlow";
 
 const Hero: React.FC = () => {
@@ -30,13 +31,15 @@ const Hero: React.FC = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-8 py-4 bg-[#FF6B35] text-[#0A0A0A] font-bold headline uppercase tracking-widest text-sm hover:shadow-[0_0_20px_rgba(255,107,53,0.4)] transition-all"
-            >
-              Launch Demo
-            </motion.button>
+            <Link to="/demo">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-8 py-4 bg-[#FF6B35] text-[#0A0A0A] font-bold headline uppercase tracking-widest text-sm hover:shadow-[0_0_20px_rgba(255,107,53,0.4)] transition-all"
+              >
+                Launch Demo
+              </motion.button>
+            </Link>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

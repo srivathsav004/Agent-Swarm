@@ -9,6 +9,7 @@ import TechStack from './LandingPage/TechStack';
 import Comparison from './LandingPage/Comparison';
 import Footer from './LandingPage/Footer';
 import Demo from './demo/Demo';
+import Web3Provider from './demo/Web3Provider';
 
 const HomePage: React.FC = () => {
   return (
@@ -55,7 +56,14 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/demo" element={<Demo />} />
+        <Route
+          path="/demo"
+          element={(
+            <Web3Provider>
+              <Demo />
+            </Web3Provider>
+          )}
+        />
       </Routes>
     </Router>
   );

@@ -16,9 +16,9 @@ const App: React.FC = () => {
           <span className="text-xl font-bold headline tracking-tighter">AGENTSWARM</span>
         </div>
         <div className="hidden md:flex gap-8 text-sm inter-label font-medium uppercase tracking-widest text-[#F5F5F5]/60">
-          <a href="#how" className="hover:text-[#00FF94] transition-colors">Protocol</a>
-          <a href="#flow" className="hover:text-[#00FF94] transition-colors">Explorer</a>
-          <a href="#tech" className="hover:text-[#00FF94] transition-colors">Stack</a>
+          <a href="#how" className="hover:text-[#00FF94] transition-colors">How_It_Works</a>
+          <a href="#flow" className="hover:text-[#00FF94] transition-colors">Live_Flow</a>
+          {/* <a href="#tech" className="hover:text-[#00FF94] transition-colors">Stack</a> */}
           <a href="#magic" className="hover:text-[#00FF94] transition-colors">Compare</a>
         </div>
         <button className="bg-[#1A1A1A] border border-[#333333] px-4 py-2 text-xs uppercase tracking-widest hover:border-[#FF6B35] transition-all">
@@ -30,7 +30,7 @@ const App: React.FC = () => {
         <Hero />
         <HowItWorks />
         <PaymentFlow />
-        <TechStack />
+        {/* <TechStack /> */}
         <Comparison />
       </main>
 

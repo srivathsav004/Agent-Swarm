@@ -13,16 +13,12 @@ const TechBadge: React.FC<{ text: string }> = ({ text }) => (
 
 const TechStack: React.FC = () => {
   return (
-    <section id="tech" className="py-24 px-6 text-center max-w-7xl mx-auto">
-      <h2 className="text-2xl font-bold headline mb-12 uppercase tracking-widest text-[#F5F5F5]/40">Built on Industrial Standards</h2>
-      <div className="flex flex-wrap justify-center gap-4">
+    <section id="tech" className="py-12 px-6 text-center max-w-7xl mx-auto">
+      <h2 className="text-sm font-bold headline mb-6 uppercase tracking-[0.2em] text-[#F5F5F5]/40">Built on Industrial Standards</h2>
+      <div className="flex flex-wrap justify-center gap-3">
         <TechBadge text="x402 Protocol" />
         <TechBadge text="ERC-8004 Reputation" />
-        <TechBadge text="SKALE Gasless" />
-        <TechBadge text="FastAPI Backend" />
-        <TechBadge text="OpenAI Swarm" />
-        <TechBadge text="zkSync Era" />
-        <TechBadge text="IPFS Storage" />
+        <TechBadge text="SKALE" />
       </div>
     </section>
   );

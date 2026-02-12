@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { inject } from '@vercel/analytics';
-import Hero from './components/LandingPage/Hero';
-import HowItWorks from './components/LandingPage/HowItWorks';
-import PaymentFlow from './components/LandingPage/PaymentFlow';
-import TechStack from './components/LandingPage/TechStack';
-import Comparison from './components/LandingPage/Comparison';
-import Footer from './components/LandingPage/Footer';
+import Hero from './LandingPage/Hero';
+import HowItWorks from './LandingPage/HowItWorks';
+import PaymentFlow from './LandingPage/PaymentFlow';
+import TechStack from './LandingPage/TechStack';
+import Comparison from './LandingPage/Comparison';
+import Footer from './LandingPage/Footer';
 
 const App: React.FC = () => {
   return (

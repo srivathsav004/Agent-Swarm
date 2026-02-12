@@ -2,6 +2,7 @@ import React from 'react';
 import Header from './header';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import PromptSection from './PromptSection';
 
 const Demo: React.FC = () => {
   const { isConnected } = useAccount();
@@ -61,16 +62,21 @@ const Demo: React.FC = () => {
     <div className="min-h-screen selection:bg-[#00FF94] selection:text-[#0A0A0A] relative">
       <Header />
 
-      <main className="pt-20 flex items-center justify-center min-h-screen">
-
-        <div className="text-center">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 headline leading-[0.9] text-[#F5F5F5]">
-            DEMO
+      <main className="pt-24 pb-16 px-6 md:px-10 lg:px-16 max-w-6xl mx-auto">
+        <div className="mb-8 md:mb-10">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight headline leading-tight text-[#F5F5F5]">
+            Spin up an on-chain
+            <span className="block text-[#F97316]">agent pipeline</span>
+            with a fixed budget.
           </h1>
-          <p className="text-lg text-[#F5F5F5]/60 max-w-2xl mx-auto font-mono">
-            Demo page - Coming soon
+          <p className="mt-4 max-w-2xl text-sm md:text-base text-[#E5E7EB]/70 font-mono">
+            Connect your wallet, describe the task, and we&apos;ll auto-select the best coordinator,
+            research, analyst, content, and code agents from the on-chain registry to estimate the
+            required AGENT budget.
           </p>
         </div>
+
+        <PromptSection />
       </main>
 
       {!isConnected && (

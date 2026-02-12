@@ -21,9 +21,14 @@ const App: React.FC = () => {
           {/* <a href="#tech" className="hover:text-[#00FF94] transition-colors">Stack</a> */}
           <a href="#magic" className="hover:text-[#00FF94] transition-colors">Compare</a>
         </div>
-        <button className="bg-[#1A1A1A] border border-[#333333] px-4 py-2 text-xs uppercase tracking-widest hover:border-[#FF6B35] transition-all">
-          Connect
-        </button>
+        <div className="flex items-center gap-4">
+          <button className="bg-[#0A0A0A] border border-[#333333] px-4 py-2 text-xs uppercase tracking-widest hover:border-[#F5F5F5] hover:bg-[#1A1A1A] transition-all text-[#F5F5F5]">
+            DOCS
+          </button>
+          <button className="bg-[#FF6B35] px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 hover:opacity-80 transition-opacity text-[#0A0A0A] font-bold">
+            LAUNCH DEMO <span className="text-lg leading-none">→</span>
+          </button>
+        </div>
       </nav>
 
       <main className="pt-20">

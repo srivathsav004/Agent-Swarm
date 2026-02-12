@@ -12,7 +12,7 @@ const App: React.FC = () => {
     <div className="min-h-screen selection:bg-[#00FF94] selection:text-[#0A0A0A]">
       <nav className="fixed top-0 left-0 w-full z-50 border-b border-[#333333] bg-[#0A0A0A]/80 backdrop-blur-md px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#FF6B35] rounded-sm flex items-center justify-center font-bold text-[#0A0A0A]">AS</div>
+          <img src="/logo-agent-swarm.svg" alt="AgentSwarm" className="w-8 h-8 rounded-sm" />
           <span className="text-xl font-bold headline tracking-tighter">AGENTSWARM</span>
         </div>
         <div className="hidden md:flex gap-8 text-sm inter-label font-medium uppercase tracking-widest text-[#F5F5F5]/60">

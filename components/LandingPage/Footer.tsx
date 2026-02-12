@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
         <div className="text-center md:text-left group">
           <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#FF6B35] rounded-sm flex items-center justify-center font-bold text-[#0A0A0A]">AS</div>
+          <img src="/logo-agent-swarm.svg" alt="AgentSwarm" className="w-8 h-8 rounded-sm" />
           <span className="text-xl font-bold headline tracking-tighter">AGENTSWARM</span>
         </div>
           <p className="text-[#F5F5F5]/40 font-mono text-xs">

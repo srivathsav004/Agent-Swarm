@@ -41,7 +41,7 @@ const LiveDemo: React.FC = () => {
           <li>Enter a task: &quot;Create a landing page for [your idea]&quot;</li>
           <li>Watch the magic happen!</li>
         </ul>
-        <div>
+        {/* <div>
           <p className="mb-1 font-semibold text-zinc-100">
             Sample Tasks to Try:
           </p>
@@ -51,7 +51,7 @@ const LiveDemo: React.FC = () => {
             <li>&quot;Design a mobile app wireframe for food delivery&quot;</li>
             <li>&quot;Write smart contract documentation&quot;</li>
           </ul>
-        </div>
+        </div> */}
       </div>
     </Card>
   );

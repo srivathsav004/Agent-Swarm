@@ -69,14 +69,14 @@ const Prerequisites: React.FC = () => {
         </li>
       </ul>
 
-      <h3 className="mb-2 text-lg font-semibold text-zinc-100">
+      {/* <h3 className="mb-2 text-lg font-semibold text-zinc-100">
         Technical Requirements
       </h3>
       <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-300">
         <li>Modern web browser with Web3 support</li>
         <li>Stable internet connection for real-time agent communication</li>
         <li>Basic understanding of blockchain transactions</li>
-      </ul>
+      </ul> */}
     </Card>
   );
 };

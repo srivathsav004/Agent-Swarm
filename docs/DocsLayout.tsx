@@ -19,7 +19,7 @@ const navItems = [
   { to: '/docs/architecture', label: 'Smart Contract Architecture', icon: Boxes },
   { to: '/docs/demo', label: 'Live Demo', icon: Film },
   { to: '/docs/workflow', label: 'User Workflow', icon: Workflow },
-  { to: '/docs/integration', label: 'Integration Guide', icon: PlugZap },
+  // { to: '/docs/integration', label: 'Integration Guide', icon: PlugZap },
   { to: '/docs/network', label: 'Network Details', icon: Network },
   { to: '/docs/faq', label: 'FAQ', icon: HelpCircle },
   { to: '/docs/deep-dive', label: 'Technical Deep Dive', icon: Cpu },

@@ -20,7 +20,7 @@ export const SKALE_CHAIN = {
 // Deployed contract addresses (from public/app.js and apis/escrow.js)
 export const CONTRACTS = {
   AGENT_TOKEN: '0xEC307d7ae333C32b70889F0Fd61ce6f02Ee31Cf8' as Hex,
-  TASK_ESCROW: '0x29B8dB70779839AdD01c87bEC59475aBB8e94E62' as Hex,
+  TASK_ESCROW: '0x7448471429d6b31A25809deffB1C6e4Ea209C4F6' as Hex,
   AGENT_REGISTRY: '0x5dB6615Be918c7d12c1342C7580BeA4a7726d6b1' as Hex,
 } as const;
 
@@ -77,6 +77,16 @@ export const TOKEN_ABI = [
     stateMutability: 'nonpayable',
     inputs: [
       { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ type: 'bool' }],
+  },
+  {
+    type: 'function',
+    name: 'transfer',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
       { name: 'amount', type: 'uint256' },
     ],
     outputs: [{ type: 'bool' }],
@@ -181,6 +191,27 @@ export const ESCROW_ABI = [
     outputs: [{ type: 'uint256' }],
   },
   {
+    type: 'function',
+    name: 'deposit',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'amount', type: 'uint256' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'getUserDepositBalance',
+    stateMutability: 'view',
+    inputs: [{ name: 'user', type: 'address' }],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'getUserDeposit',
+    stateMutability: 'view',
+    inputs: [{ name: 'user', type: 'address' }],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
     type: 'event',
     name: 'TaskCreated',
     inputs: [
@@ -188,6 +219,14 @@ export const ESCROW_ABI = [
       { name: 'client', type: 'address', indexed: true },
       { name: 'totalBudget', type: 'uint256', indexed: false },
       { name: 'coordinatorFee', type: 'uint256', indexed: false },
+    ],
+  },
+  {
+    type: 'event',
+    name: 'Deposit',
+    inputs: [
+      { name: 'user', type: 'address', indexed: true },
+      { name: 'amount', type: 'uint256', indexed: false },
     ],
   },
 ] as const;

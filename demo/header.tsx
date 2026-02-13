@@ -8,7 +8,7 @@ const Header: React.FC = () => {
   const { disconnect } = useDisconnect();
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
-  const { balances, loading, refresh, hasClaimed, claimLoading, claimFreeCredits, error } = useAgentBalances();
+  const { balances, usdcBalance, loading, refresh, hasClaimed, claimLoading, claimFreeCredits, error } = useAgentBalances();
 
   const scrollToTokens = () => {
     document.getElementById('tokens')?.scrollIntoView({ behavior: 'smooth' });
@@ -124,10 +124,22 @@ const Header: React.FC = () => {
                   >
                     <img src="/agent-token.jpg" alt="AGENT" className="w-5 h-5 rounded-full" />
                     <span className="text-sm font-semibold text-amber-300">
-                      {Number(formatUnits(balances.escrowAllowance, balances.decimals)).toFixed(0)}
+                      {Number(formatUnits(balances.escrowBalance, balances.decimals)).toFixed(0)}
                     </span>
                   </button>
                 </div>
+
+                {usdcBalance !== null && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-neutral-400 font-medium">USDC:</span>
+                    <div className="flex items-center gap-2 rounded-lg bg-neutral-900 px-3 py-1.5 border border-neutral-700">
+                      <img src="/usdc-icon.svg" alt="USDC" className="w-5 h-5 rounded-full" />
+                      <span className="text-sm font-semibold text-white">
+                        {Number(formatUnits(usdcBalance, 6)).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-3 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2">

@@ -1,7 +1,9 @@
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+
 export const ESCROW_API_ROUTES = {
-  allocate: '/api/escrow/allocate',
-  completeRequest: '/api/escrow/complete-request',
-  completeTask: '/api/escrow/complete-task',
+  allocate: `${BACKEND_URL}/api/escrow/allocate`,
+  completeRequest: `${BACKEND_URL}/api/escrow/complete-request`,
+  completeTask: `${BACKEND_URL}/api/escrow/complete-task`,
 } as const;
 
 export interface AllocateRequestPayload {

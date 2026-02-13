@@ -1,5 +1,6 @@
 import { createPublicClient, createWalletClient, http, custom, type PublicClient, type WalletClient, type Hex, parseUnits } from 'viem';
-import { SKALE_CHAIN, CONTRACTS, TOKEN_ABI, REGISTRY_ABI, ESCROW_ABI } from './contracts';
+import { baseSepolia } from 'viem/chains';
+import { SKALE_CHAIN, CONTRACTS, TOKEN_ABI, REGISTRY_ABI, ESCROW_ABI, ERC20_ABI, USDC_BASE_ADDRESS, USDC_DECIMALS } from './contracts';
 
 export type AgentTypeKey = 'Coordinator' | 'Research' | 'Analyst' | 'Content' | 'Code';
 
@@ -25,6 +26,7 @@ export interface AgentPipelineSelection {
 export interface BalanceSummary {
   walletToken: bigint;
   escrowAllowance: bigint;
+  escrowBalance: bigint; // Actual tokens held by escrow contract for this user
   decimals: number;
   symbol: string;
 }
@@ -53,6 +55,37 @@ export function createSkaleWalletClient(): WalletClient | null {
   }
 
   return null; // No wallet available for write operations
+}
+
+export function createBaseClient(): PublicClient {
+  if (typeof window !== 'undefined' && (window as any)?.ethereum) {
+    return createPublicClient({
+      chain: baseSepolia,
+      transport: custom((window as any).ethereum),
+    });
+  }
+
+  // Fallback to public RPC for read-only
+  return createPublicClient({
+    chain: baseSepolia,
+    transport: http('https://sepolia.base.org'),
+  });
+}
+
+export async function getUsdcBalance(userAddress: Hex): Promise<bigint> {
+  try {
+    const client = createBaseClient();
+    const balance = await client.readContract({
+      address: USDC_BASE_ADDRESS,
+      abi: ERC20_ABI,
+      functionName: 'balanceOf',
+      args: [userAddress],
+    }) as Promise<bigint>;
+    return balance;
+  } catch (error) {
+    console.warn('Failed to get USDC balance:', error);
+    return 0n;
+  }
 }
 
 export async function getBalances(client: PublicClient, userAddress: Hex): Promise<BalanceSummary> {
@@ -91,9 +124,25 @@ export async function getBalances(client: PublicClient, userAddress: Hex): Promi
     symbol = 'AGENT';
   }
 
+  // Get user's actual deposit balance from escrow contract
+  let escrowBalance = 0n;
+  try {
+    escrowBalance = await client.readContract({
+      address: CONTRACTS.TASK_ESCROW,
+      abi: ESCROW_ABI,
+      functionName: 'getUserDepositBalance',
+      args: [userAddress],
+    }) as Promise<bigint>;
+  } catch (error) {
+    // Fallback: if getUserDepositBalance doesn't exist (old contract), use allowance
+    console.warn('getUserDepositBalance not available, using allowance:', error);
+    escrowBalance = escrowAllowance;
+  }
+
   return {
     walletToken,
     escrowAllowance,
+    escrowBalance, // Actual tokens deposited to escrow contract
     decimals,
     symbol,
   };
@@ -210,11 +259,46 @@ export async function approveEscrow(userAddress: Hex, amount: bigint): Promise<H
     throw new Error('Wallet not connected');
   }
 
+  // Check current allowance and add to it (approve accumulates, doesn't overwrite)
+  const publicClient = createSkaleClient();
+  const currentAllowance = await publicClient.readContract({
+    address: CONTRACTS.AGENT_TOKEN,
+    abi: TOKEN_ABI,
+    functionName: 'allowance',
+    args: [userAddress, CONTRACTS.TASK_ESCROW],
+  }) as bigint;
+
+  // Total allowance = current + new amount
+  const totalAllowance = currentAllowance + amount;
+
   const hash = await walletClient.writeContract({
+    chain: SKALE_CHAIN,
     address: CONTRACTS.AGENT_TOKEN,
     abi: TOKEN_ABI,
     functionName: 'approve',
-    args: [CONTRACTS.TASK_ESCROW, amount],
+    args: [CONTRACTS.TASK_ESCROW, totalAllowance],
+    account: userAddress,
+  });
+
+  await publicClient.waitForTransactionReceipt({ hash });
+  
+  return hash;
+}
+
+/** Deposit tokens to escrow contract using the contract's deposit function. Requires approval first. */
+export async function depositToEscrow(userAddress: Hex, amount: bigint): Promise<Hex> {
+  const walletClient = createSkaleWalletClient();
+  if (!walletClient) {
+    throw new Error('Wallet not connected');
+  }
+
+  // Use the escrow contract's deposit function (tracks per-user deposits)
+  const hash = await walletClient.writeContract({
+    chain: SKALE_CHAIN,
+    address: CONTRACTS.TASK_ESCROW,
+    abi: ESCROW_ABI,
+    functionName: 'deposit',
+    args: [amount],
     account: userAddress,
   });
 
@@ -222,6 +306,17 @@ export async function approveEscrow(userAddress: Hex, amount: bigint): Promise<H
   await publicClient.waitForTransactionReceipt({ hash });
   
   return hash;
+}
+
+/** Two-step deposit: 1) Approve escrow, 2) Deposit tokens to escrow using contract's deposit function */
+export async function depositTokensToEscrow(userAddress: Hex, amount: bigint): Promise<{ approvalHash: Hex; depositHash: Hex }> {
+  // Step 1: Approve escrow to spend tokens (accumulate with existing allowance)
+  const approvalHash = await approveEscrow(userAddress, amount);
+  
+  // Step 2: Deposit tokens to escrow contract (tracks per-user balance)
+  const depositHash = await depositToEscrow(userAddress, amount);
+  
+  return { approvalHash, depositHash };
 }
 
 export async function createTask(
@@ -236,6 +331,7 @@ export async function createTask(
   }
 
   const hash = await walletClient.writeContract({
+    chain: SKALE_CHAIN,
     address: CONTRACTS.TASK_ESCROW,
     abi: ESCROW_ABI,
     functionName: 'createTaskWithBudget',

@@ -16,7 +16,7 @@ const Demo: React.FC = () => {
   const [showEstimate, setShowEstimate] = React.useState(false);
   const [pipeline, setPipeline] = React.useState<AgentPipelineSelection | null>(null);
   const [totalBudget, setTotalBudget] = React.useState<bigint | null>(null);
-  const [tokenSymbol, setTokenSymbol] = React.useState<string>('AGENT');
+  const [tokenSymbol, setTokenSymbol] = React.useState<string>('AGT');
   const [showExecution, setShowExecution] = React.useState(false);
 
   const handleEstimate = () => {

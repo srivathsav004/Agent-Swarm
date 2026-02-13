@@ -146,7 +146,7 @@ export async function getBalances(client: PublicClient, userAddress: Hex): Promi
     }) as Promise<string>;
   } catch (error) {
     console.warn('Failed to get token symbol, using default:', error);
-    symbol = 'AGENT';
+    symbol = 'AGT';
   }
 
   // Get user's actual deposit balance from escrow contract

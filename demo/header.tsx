@@ -53,7 +53,7 @@ const Header: React.FC = () => {
                   <span className="text-[9px] text-amber-400 mt-1 uppercase tracking-wider font-medium">Free</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <span className="text-sm font-semibold text-amber-300 leading-tight">500 AGENT</span>
+                  <span className="text-sm font-semibold text-amber-300 leading-tight">500 AGT</span>
                   <span className="text-[9px] text-neutral-400 uppercase tracking-wider">Credits Available</span>
                 </div>
                 <button
@@ -106,8 +106,8 @@ const Header: React.FC = () => {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-neutral-400 font-medium">Wallet:</span>
-                  <div className="flex items-center gap-2 rounded-lg bg-neutral-900 px-3 py-1.5 border border-neutral-700 cursor-pointer hover:bg-neutral-800 transition-colors" onClick={refresh} title="Click to refresh balances">
-                    <img src="/agent-token.svg" alt="AGENT" className="w-5 h-5 rounded-full" />
+                  <div className="flex items-center gap-2 rounded-lg bg-neutral-900 px-3 py-1.5 border border-neutral-700" title="Wallet balance">
+                    <img src="/agent-token.svg" alt="AGT" className="w-5 h-5 rounded-full" />
                     <span className="text-sm font-semibold text-white">
                       {Number(formatUnits(balances.walletToken, balances.decimals)).toFixed(0)}
                     </span>
@@ -117,7 +117,7 @@ const Header: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-neutral-400 font-medium">Escrow:</span>
                   <div className="flex items-center gap-2 rounded-lg bg-neutral-900 px-3 py-1.5 border border-neutral-700 cursor-pointer hover:bg-neutral-800 transition-colors" onClick={scrollToTokens} title="Deposit tokens in the Tokens panel">
-                    <img src="/agent-token.svg" alt="AGENT" className="w-5 h-5 rounded-full" />
+                    <img src="/agent-token.svg" alt="AGT" className="w-5 h-5 rounded-full" />
                     <span className="text-sm font-semibold text-white">
                       {Number(formatUnits(balances.escrowBalance, balances.decimals)).toFixed(0)}
                     </span>

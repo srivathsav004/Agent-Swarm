@@ -15,7 +15,7 @@ const CostEstimate: React.FC<CostEstimateProps> = ({ prompt, onProceed }) => {
   const [error, setError] = React.useState<string | null>(null);
   const [pipeline, setPipeline] = React.useState<AgentPipelineSelection | null>(null);
   const [totalBudget, setTotalBudget] = React.useState<bigint | null>(null);
-  const [tokenSymbol, setTokenSymbol] = React.useState<string>('AGENT');
+  const [tokenSymbol, setTokenSymbol] = React.useState<string>('AGT');
   const [escrowBalance, setEscrowBalance] = React.useState<bigint | null>(null);
   const [walletBalance, setWalletBalance] = React.useState<bigint | null>(null);
   const [checkingFunds, setCheckingFunds] = React.useState(false);
@@ -153,8 +153,9 @@ const CostEstimate: React.FC<CostEstimateProps> = ({ prompt, onProceed }) => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-semibold text-white">
+                  <div className="text-sm font-semibold text-white flex items-center justify-end gap-1">
                     {formatUnits(agent.pricePerTask, 18)} {tokenSymbol}
+                    <img src="/agent-token.svg" alt="AGT" className="w-4 h-4 rounded-full" />
                   </div>
                 </div>
               </div>
@@ -168,8 +169,9 @@ const CostEstimate: React.FC<CostEstimateProps> = ({ prompt, onProceed }) => {
           <span className="text-sm text-neutral-400">
             Total Budget Required:
           </span>
-          <span className="text-2xl font-bold text-white">
-            {formatUnits(totalBudget, 18)} {tokenSymbol}
+          <span className="text-2xl font-bold text-white flex items-center gap-2">
+            {Number(formatUnits(totalBudget, 18)).toFixed(0)} {tokenSymbol}
+            <img src="/agent-token.svg" alt="AGT" className="w-5 h-5 rounded-full" />
           </span>
         </div>
         
@@ -182,14 +184,16 @@ const CostEstimate: React.FC<CostEstimateProps> = ({ prompt, onProceed }) => {
           <div className="mt-4 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-neutral-400">Wallet Balance:</span>
-              <span className={`font-medium ${walletBalance >= totalBudget ? 'text-green-400' : 'text-red-400'}`}>
-                {formatUnits(walletBalance, 18)} {tokenSymbol}
+              <span className={`font-medium ${walletBalance >= totalBudget ? 'text-green-400' : 'text-red-400'} flex items-center gap-1`}>
+                {Number(formatUnits(walletBalance, 18)).toFixed(0)} {tokenSymbol}
+                <img src="/agent-token.svg" alt="AGT" className="w-4 h-4 rounded-full" />
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-neutral-400">Escrow Balance:</span>
-              <span className={`font-medium ${escrowBalance >= totalBudget ? 'text-green-400' : 'text-red-400'}`}>
-                {formatUnits(escrowBalance, 18)} {tokenSymbol}
+              <span className={`font-medium ${escrowBalance >= totalBudget ? 'text-green-400' : 'text-red-400'} flex items-center gap-1`}>
+                {Number(formatUnits(escrowBalance, 18)).toFixed(0)} {tokenSymbol}
+                <img src="/agent-token.svg" alt="AGT" className="w-4 h-4 rounded-full" />
               </span>
             </div>
             
@@ -217,14 +221,14 @@ const CostEstimate: React.FC<CostEstimateProps> = ({ prompt, onProceed }) => {
                     ⚠ Insufficient funds. Please deposit more tokens or approve escrow.
                   </p>
                 </div>
-                {walletBalance < totalBudget && (
+                {walletBalance && totalBudget && walletBalance < totalBudget && (
                   <p className="text-sm text-neutral-400 mb-3">
-                    Need {formatUnits(totalBudget - walletBalance, 18)} more {tokenSymbol} in wallet.
+                    Need {Number(formatUnits(totalBudget - walletBalance, 18)).toFixed(0)} more {tokenSymbol} in wallet.
                   </p>
                 )}
-                {escrowBalance < totalBudget && (
+                {escrowBalance && totalBudget && escrowBalance < totalBudget && (
                   <p className="text-sm text-neutral-400 mb-3">
-                    Need to deposit {formatUnits(totalBudget - escrowBalance, 18)} more {tokenSymbol} to escrow.
+                    Need to deposit {Number(formatUnits(totalBudget - escrowBalance, 18)).toFixed(0)} more {tokenSymbol} to escrow.
                   </p>
                 )}
                 <button

@@ -12,7 +12,8 @@ interface AgentExecution {
   status: 'pending' | 'allocating' | 'processing' | 'completed' | 'failed';
   input?: string;
   output?: string;
-  txHash?: string;
+  txHash?: string; // Latest tx hash (completion tx replaces allocation tx)
+  allocationTxHash?: string; // Allocation tx hash (shown separately)
   paymentAmount?: bigint;
   timestamp?: Date;
   requestId?: string;
@@ -37,6 +38,7 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
   const [coordinatorPaid, setCoordinatorPaid] = React.useState(false);
   const [finalOutput, setFinalOutput] = React.useState<string | null>(null);
   const [hasStarted, setHasStarted] = React.useState(false);
+  const [completeTaskTxHash, setCompleteTaskTxHash] = React.useState<Hex | null>(null);
 
   const coordinator = pipeline.Coordinator;
   if (!coordinator) {
@@ -162,6 +164,7 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
 
         // Allocate budget to agent (coordinator is doing this)
         try {
+          // Step 1: Allocate budget - show tx hash immediately
           const allocateResult = await allocateBudget({
             taskId: taskId.toString(),
             toAgentId: agent.id,
@@ -169,27 +172,36 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
             input: currentInput,
           });
 
+          // Update UI immediately with allocation tx hash
           updateExecution(agentType, {
             status: 'processing',
             requestId: allocateResult.requestId,
-            txHash: allocateResult.txHash,
+            allocationTxHash: allocateResult.txHash, // Store allocation tx hash separately
+            txHash: allocateResult.txHash, // Also show as main tx hash initially
+            timestamp: new Date(),
           });
 
-          // Wait for agent processing
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          // Step 2: Call the real agent via backend API (OpenRouter) - happens in parallel
+          const agentResultPromise = runAgent({
+            agentType,
+            input: currentInput,
+          });
 
-          // Complete the request (agent finishes work on-chain)
+          // Step 3: Complete the request (agent finishes work on-chain) - show completion tx hash immediately
           const completeResult = await completeAgentRequest({
             requestId: allocateResult.requestId!,
             success: true,
             agentType: agentType,
           });
 
-          // Call the real agent via backend API (OpenRouter)
-          const agentResult = await runAgent({
-            agentType,
-            input: currentInput,
+          // Update UI immediately with completion tx hash
+          updateExecution(agentType, {
+            txHash: completeResult.txHash, // Completion tx hash replaces allocation tx hash
+            timestamp: new Date(),
           });
+
+          // Step 4: Wait for agent API call to finish
+          const agentResult = await agentResultPromise;
 
           if (!agentResult.success) {
             throw new Error(agentResult.error || `Agent ${agentType} failed`);
@@ -197,13 +209,14 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
 
           const output = agentResult.output || currentInput;
 
+          // Step 5: Final update with output and payment info
           updateExecution(agentType, {
             status: 'completed',
             output: output,
             paymentAmount: agent.pricePerTask,
-            txHash: completeResult.txHash,
             reputationBefore: agent.reputation,
             reputationAfter: Math.min(agent.reputation + 10, 1000),
+            timestamp: new Date(),
           });
 
           currentInput = output; // Chain output to next agent
@@ -216,12 +229,14 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
         }
       }
 
-      // Step 3: Finalize task and pay coordinator
-      await completeTask({
+      // Step 3: Finalize task and pay coordinator - show tx hash immediately
+      const completeTaskResult = await completeTask({
         taskId: taskId.toString(),
         success: true,
       });
 
+      // Update UI immediately with task completion tx hash
+      setCompleteTaskTxHash((completeTaskResult.txHash || null) as Hex | null);
       setCoordinatorPaid(true);
       setFinalOutput(currentInput);
       setStep('completed');
@@ -231,6 +246,8 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
         paymentAmount: coordinator.pricePerTask,
         reputationBefore: coordinator.reputation,
         reputationAfter: Math.min(coordinator.reputation + 10, 1000),
+        txHash: completeTaskResult.txHash as Hex | undefined,
+        timestamp: new Date(),
       });
     } catch (e: any) {
       setError(e?.message ?? 'Failed to execute agents');
@@ -331,7 +348,15 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
                   Executing Agent Pipeline...
                 </p>
                 <p className="text-xs text-neutral-400 mt-1">
-                  Coordinator → Research → Analyst → Content → Code
+                  {executions
+                    .filter((e) => e.agentType !== 'Coordinator')
+                    .map((e) => {
+                      if (e.status === 'completed') return `✓ ${e.agentType}`;
+                      if (e.status === 'processing' || e.status === 'allocating')
+                        return `⟳ ${e.agentType}`;
+                      return e.agentType;
+                    })
+                    .join(' → ')}
                 </p>
               </div>
             </div>
@@ -342,12 +367,25 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
         {step === 'completed' && (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center text-sm font-bold text-neutral-300">
+              <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-sm font-bold text-white">
                 ✓
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-white">
                   Task Completed Successfully
+                </p>
+                {completeTaskTxHash && (
+                  <a
+                    href={`https://base-sepolia-testnet-explorer.skalenodes.com//tx/${completeTaskTxHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-neutral-400 hover:underline mt-1 block"
+                  >
+                    View Completion TX: {completeTaskTxHash.slice(0, 10)}...
+                  </a>
+                )}
+                <p className="text-xs text-neutral-400 mt-1">
+                  All agents paid. Coordinator fee distributed. Task finalized on-chain.
                 </p>
               </div>
             </div>
@@ -483,16 +521,30 @@ const AgentCard: React.FC<AgentCardProps> = ({ execution, tokenSymbol }) => {
             )}
           </div>
         </div>
-        {execution.txHash && (
-          <a
-            href={`https://base-sepolia-testnet-explorer.skalenodes.com//tx/${execution.txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-neutral-400 hover:underline font-medium"
-          >
-            TX
-          </a>
-        )}
+        <div className="flex flex-col gap-1 items-end">
+          {execution.allocationTxHash && execution.status !== 'completed' && (
+            <a
+              href={`https://base-sepolia-testnet-explorer.skalenodes.com//tx/${execution.allocationTxHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-400 hover:underline font-medium"
+              title="Allocation TX"
+            >
+              Alloc TX
+            </a>
+          )}
+          {execution.txHash && (
+            <a
+              href={`https://base-sepolia-testnet-explorer.skalenodes.com//tx/${execution.txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-green-400 hover:underline font-medium"
+              title={execution.status === 'completed' ? 'Completion TX' : 'Latest TX'}
+            >
+              {execution.status === 'completed' ? 'Complete TX' : 'TX'}
+            </a>
+          )}
+        </div>
       </div>
 
       {execution.input && (
@@ -518,11 +570,22 @@ const AgentCard: React.FC<AgentCardProps> = ({ execution, tokenSymbol }) => {
       )}
 
       {execution.status === 'processing' || execution.status === 'allocating' ? (
-        <div className="mt-3 flex items-center gap-2">
-          <div className="w-2 h-2 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
-          <span className="text-xs text-neutral-400">
-            {execution.status === 'allocating' ? 'Allocating budget...' : 'Processing...'}
-          </span>
+        <div className="mt-3 space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+            <span className="text-xs text-neutral-400">
+              {execution.status === 'allocating' 
+                ? 'Allocating budget...' 
+                : execution.allocationTxHash 
+                  ? 'Agent processing...' 
+                  : 'Processing...'}
+            </span>
+          </div>
+          {execution.allocationTxHash && execution.status === 'processing' && (
+            <p className="text-xs text-neutral-500 ml-4">
+              Budget allocated • Waiting for agent completion...
+            </p>
+          )}
         </div>
       ) : null}
     </div>

@@ -1,5 +1,5 @@
-import { createPublicClient, createWalletClient, http, custom, type PublicClient, type WalletClient, type Hex } from 'viem';
-import { SKALE_CHAIN, CONTRACTS, TOKEN_ABI, REGISTRY_ABI } from './contracts';
+import { createPublicClient, createWalletClient, http, custom, type PublicClient, type WalletClient, type Hex, parseUnits } from 'viem';
+import { SKALE_CHAIN, CONTRACTS, TOKEN_ABI, REGISTRY_ABI, ESCROW_ABI } from './contracts';
 
 export type AgentTypeKey = 'Coordinator' | 'Research' | 'Analyst' | 'Content' | 'Code';
 
@@ -202,5 +202,79 @@ export function calculatePipelineBudget(pipeline: AgentPipelineSelection): bigin
     }
   });
   return total;
+}
+
+export async function approveEscrow(userAddress: Hex, amount: bigint): Promise<Hex> {
+  const walletClient = createSkaleWalletClient();
+  if (!walletClient) {
+    throw new Error('Wallet not connected');
+  }
+
+  const hash = await walletClient.writeContract({
+    address: CONTRACTS.AGENT_TOKEN,
+    abi: TOKEN_ABI,
+    functionName: 'approve',
+    args: [CONTRACTS.TASK_ESCROW, amount],
+    account: userAddress,
+  });
+
+  const publicClient = createSkaleClient();
+  await publicClient.waitForTransactionReceipt({ hash });
+  
+  return hash;
+}
+
+export async function createTask(
+  userAddress: Hex,
+  coordinatorAgentId: number,
+  totalBudget: bigint,
+  taskHash: string = 'ipfs://task'
+): Promise<{ taskId: number; txHash: Hex }> {
+  const walletClient = createSkaleWalletClient();
+  if (!walletClient) {
+    throw new Error('Wallet not connected');
+  }
+
+  const hash = await walletClient.writeContract({
+    address: CONTRACTS.TASK_ESCROW,
+    abi: ESCROW_ABI,
+    functionName: 'createTaskWithBudget',
+    args: [BigInt(coordinatorAgentId), totalBudget, taskHash],
+    account: userAddress,
+  });
+
+  const publicClient = createSkaleClient();
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+  // Extract task ID from event logs
+  let taskId: number | null = null;
+  for (const log of receipt.logs) {
+    try {
+      const decoded = publicClient.decodeEventLog({
+        abi: ESCROW_ABI,
+        data: log.data,
+        topics: log.topics,
+      });
+      if (decoded.eventName === 'TaskCreated') {
+        taskId = Number((decoded.args as any).taskId || (decoded.args as any)[0]);
+        break;
+      }
+    } catch {
+      // Try extracting from topics directly
+      if (log.topics.length >= 2) {
+        try {
+          // TaskCreated(uint256 indexed taskId, ...) - taskId is in topics[1]
+          taskId = Number(BigInt(log.topics[1]));
+          break;
+        } catch {}
+      }
+    }
+  }
+
+  if (taskId === null) {
+    throw new Error('Failed to extract task ID from transaction. Please check the transaction receipt.');
+  }
+
+  return { taskId, txHash: hash };
 }
 

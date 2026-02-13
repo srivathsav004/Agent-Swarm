@@ -71,6 +71,50 @@ export const TOKEN_ABI = [
     inputs: [{ name: 'user', type: 'address' }],
     outputs: [{ type: 'bool' }],
   },
+  {
+    type: 'function',
+    name: 'approve',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ type: 'bool' }],
+  },
+  {
+    type: 'function',
+    name: 'claimAgentTokens',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'usdcAmount', type: 'uint256' }],
+    outputs: [],
+  },
+] as const;
+
+// Bridge: buy AGENT with USDC on Base (from bridge.html)
+export const BASE_CHAIN_ID = 84532; // Base Sepolia
+export const BRIDGE_OWNER_ADDRESS = '0x148355AAac6679908684c02555106bB58942F15d' as Hex;
+export const USDC_BASE_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as Hex;
+export const USDC_DECIMALS = 6;
+export const AGENT_PER_USDC = 500;
+
+export const ERC20_ABI = [
+  {
+    type: 'function',
+    name: 'balanceOf',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'transfer',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ type: 'bool' }],
+  },
 ] as const;
 
 export const REGISTRY_ABI = [
@@ -123,6 +167,27 @@ export const ESCROW_ABI = [
           { name: 'deadline', type: 'uint256' },
         ],
       },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'createTaskWithBudget',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'coordinatorAgentId', type: 'uint256' },
+      { name: 'totalBudget', type: 'uint256' },
+      { name: 'taskHash', type: 'string' },
+    ],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    type: 'event',
+    name: 'TaskCreated',
+    inputs: [
+      { name: 'taskId', type: 'uint256', indexed: true },
+      { name: 'client', type: 'address', indexed: true },
+      { name: 'totalBudget', type: 'uint256', indexed: false },
+      { name: 'coordinatorFee', type: 'uint256', indexed: false },
     ],
   },
 ] as const;

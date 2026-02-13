@@ -2,6 +2,7 @@ import React from 'react';
 import { useAccount } from 'wagmi';
 import { createSkaleClient, getBalances, AGENT_TYPES, type AgentPipelineSelection } from '../service/web3';
 import { allocateBudget, completeAgentRequest, completeTask, createTaskForClient } from '../service/escrowApi';
+import { runAgent } from '../service/agentsApi';
 import { formatUnits } from 'viem';
 import type { Hex } from 'viem';
 
@@ -135,17 +136,9 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
     if (!address) return;
     
     try {
-      // Step 1: Coordinator processes the input first
-      updateExecution('Coordinator', {
-        status: 'processing',
-        timestamp: new Date(),
-      });
+      // Step 1: Coordinator in this demo is a simple pass-through (no LLM call)
+      const coordinatorOutput = prompt;
 
-      // Simulate coordinator processing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      const coordinatorOutput = generateAgentOutput('Coordinator', prompt);
-      
       updateExecution('Coordinator', {
         status: 'completed',
         output: coordinatorOutput,
@@ -185,15 +178,24 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
           // Wait for agent processing
           await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          // Complete the request (agent finishes work)
+          // Complete the request (agent finishes work on-chain)
           const completeResult = await completeAgentRequest({
             requestId: allocateResult.requestId!,
             success: true,
             agentType: agentType,
           });
 
-          // Generate output based on agent type
-          const output = generateAgentOutput(agentType, currentInput);
+          // Call the real agent via backend API (OpenRouter)
+          const agentResult = await runAgent({
+            agentType,
+            input: currentInput,
+          });
+
+          if (!agentResult.success) {
+            throw new Error(agentResult.error || `Agent ${agentType} failed`);
+          }
+
+          const output = agentResult.output || currentInput;
 
           updateExecution(agentType, {
             status: 'completed',
@@ -232,23 +234,6 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
       });
     } catch (e: any) {
       setError(e?.message ?? 'Failed to execute agents');
-    }
-  };
-
-  const generateAgentOutput = (agentType: string, input: string): string => {
-    switch (agentType) {
-      case 'Coordinator':
-        return `Coordinator Analysis:\n\nTask: ${input.substring(0, 100)}...\n\n• Task requirements analyzed\n• Agent pipeline planned\n• Budget allocated\n• Ready to delegate to Research agent`;
-      case 'Research':
-        return `Research findings on "${input.substring(0, 30)}...":\n• Market analysis completed\n• Key insights identified\n• Data sources verified\n• Research summary prepared\n• Ready for Analyst review`;
-      case 'Analyst':
-        return `Analysis of research data:\n• Strengths and weaknesses identified\n• Opportunities mapped\n• Threats assessed\n• Strategic recommendations prepared\n• Ready for Content creation`;
-      case 'Content':
-        return `Content Brief:\n\nTitle: "Strategic Content Plan"\n\nKey Points:\n1. Target audience defined\n2. Content structure outlined\n3. Tone and style established\n4. Call-to-action crafted\n• Ready for Code implementation`;
-      case 'Code':
-        return `// Implementation Complete\n\nfunction executeTask(input) {\n  // Processed: ${input.substring(0, 50)}\n  return optimizedOutput;\n}\n\n// Code reviewed and tested\n// Task completed successfully`;
-      default:
-        return `Processed: ${input}\nResult: Task completed successfully.`;
     }
   };
 

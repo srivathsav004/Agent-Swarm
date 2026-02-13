@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAccount } from 'wagmi';
-import { createSkaleClient, approveEscrow, createTask, getBalances, AGENT_TYPES, type AgentPipelineSelection } from '../service/web3';
+import { createSkaleClient, createTask, getBalances, AGENT_TYPES, type AgentPipelineSelection } from '../service/web3';
 import { allocateBudget, completeAgentRequest, completeTask } from '../service/escrowApi';
 import { formatUnits } from 'viem';
 import type { Hex } from 'viem';
@@ -28,7 +28,7 @@ interface TaskExecutionProps {
 
 const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBudget, tokenSymbol }) => {
   const { isConnected, address } = useAccount();
-  const [step, setStep] = React.useState<'checking' | 'approving' | 'creating' | 'executing' | 'completed'>('checking');
+  const [step, setStep] = React.useState<'checking' | 'creating' | 'executing' | 'completed'>('checking');
   const [error, setError] = React.useState<string | null>(null);
   const [taskId, setTaskId] = React.useState<number | null>(null);
   const [createTaskTxHash, setCreateTaskTxHash] = React.useState<Hex | null>(null);
@@ -91,21 +91,17 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
     setStep('checking');
 
     try {
-      // Step 1: Check and approve escrow if needed
+      // Step 1: Check escrow balance (approved amount)
       const client = createSkaleClient();
       const balances = await getBalances(client, address as Hex);
       
-      if (balances.escrowAllowance < totalBudget) {
-        setStep('approving');
-        updateExecution('Coordinator', {
-          status: 'allocating',
-          timestamp: new Date(),
-        });
-        
-        await approveEscrow(address as Hex, totalBudget);
+      if (balances.escrowBalance < totalBudget) {
+        setError(`Insufficient escrow balance. Please deposit ${formatUnits(totalBudget - balances.escrowBalance, 18)} more ${tokenSymbol} to escrow.`);
+        setStep('checking');
+        return;
       }
 
-      // Step 2: Create task (this transfers funds to escrow)
+      // Step 2: Create task (this transfers funds to escrow using transferFrom, no new signature needed if allowance is sufficient)
       setStep('creating');
       updateExecution('Coordinator', {
         status: 'processing',
@@ -262,8 +258,8 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
           Task Execution
         </h3>
 
-        {/* Step 1: Checking/Approving */}
-        {(step === 'checking' || step === 'approving') && (
+        {/* Step 1: Checking */}
+        {step === 'checking' && (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center text-sm font-bold text-neutral-300 animate-pulse">
@@ -271,12 +267,10 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-white">
-                  {step === 'checking' ? 'Checking Escrow Allowance...' : 'Approving Escrow...'}
+                  Checking Escrow Balance...
                 </p>
                 <p className="text-xs text-neutral-400 mt-1">
-                  {step === 'checking' 
-                    ? 'Verifying escrow permissions'
-                    : `Approving escrow to spend ${formatUnits(totalBudget, 18)} ${tokenSymbol}`}
+                  Verifying sufficient tokens are deposited in escrow
                 </p>
               </div>
             </div>

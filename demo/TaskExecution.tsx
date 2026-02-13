@@ -324,7 +324,7 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
                 </p>
                 {createTaskTxHash && (
                   <a
-                    href={`https://explorer.skale.network/tx/${createTaskTxHash}`}
+                    href={`https://base-sepolia-testnet-explorer.skalenodes.com//tx/${createTaskTxHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-neutral-400 hover:underline"
@@ -493,7 +493,7 @@ const AgentCard: React.FC<AgentCardProps> = ({ execution, tokenSymbol }) => {
         </div>
         {execution.txHash && (
           <a
-            href={`https://explorer.skale.network/tx/${execution.txHash}`}
+            href={`https://base-sepolia-testnet-explorer.skalenodes.com//tx/${execution.txHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-neutral-400 hover:underline font-medium"

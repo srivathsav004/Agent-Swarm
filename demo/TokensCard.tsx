@@ -180,7 +180,7 @@ const TokensCard: React.FC = () => {
               <p className="text-xs text-green-400">Tokens deposited successfully. Ready for task execution.</p>
               {approvalHash && (
                 <a
-                  href={`https://explorer.skale.network/tx/${approvalHash}`}
+                  href={`https://base-sepolia-testnet-explorer.skalenodes.com//tx/${approvalHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-neutral-400 hover:text-neutral-300 underline"
@@ -190,7 +190,7 @@ const TokensCard: React.FC = () => {
               )}
               {transferHash && (
                 <a
-                  href={`https://explorer.skale.network/tx/${transferHash}`}
+                  href={`https://base-sepolia-testnet-explorer.skalenodes.com//tx/${transferHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-neutral-400 hover:text-neutral-300 underline block"

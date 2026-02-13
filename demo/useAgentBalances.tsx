@@ -20,16 +20,19 @@ export function useAgentBalances() {
     setLoading(true);
     setError(null);
     try {
+      console.log('Refreshing balances for address:', address);
       const client = createSkaleClient();
       const [data, claimed, usdc] = await Promise.all([
         getBalances(client, address as Hex),
         hasClaimedFreeCredits(client, address as Hex),
         getUsdcBalance(address as Hex)
       ]);
+      console.log('USDC balance received:', usdc.toString());
       setBalances(data);
       setHasClaimed(claimed);
       setUsdcBalance(usdc);
     } catch (e: any) {
+      console.error('Balance refresh error:', e);
       setError(e?.message ?? 'Failed to load balances');
     } finally {
       setLoading(false);

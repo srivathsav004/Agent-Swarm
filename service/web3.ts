@@ -65,25 +65,50 @@ export function createBaseClient(): PublicClient {
     });
   }
 
-  // Fallback to public RPC for read-only
+  // Fallback to public RPC for read-only - try multiple endpoints
   return createPublicClient({
     chain: baseSepolia,
-    transport: http('https://sepolia.base.org'),
+    transport: http('https://base-sepolia.blockscout.com'),
   });
 }
 
 export async function getUsdcBalance(userAddress: Hex): Promise<bigint> {
   try {
-    const client = createBaseClient();
-    const balance = await client.readContract({
-      address: USDC_BASE_ADDRESS,
-      abi: ERC20_ABI,
-      functionName: 'balanceOf',
-      args: [userAddress],
-    }) as Promise<bigint>;
-    return balance;
+    console.log('Fetching USDC balance for address:', userAddress);
+    console.log('USDC contract address:', USDC_BASE_ADDRESS);
+    
+    // Try using Blockscout API directly
+    const apiUrl = `https://base-sepolia.blockscout.com/api/v2/addresses/${userAddress}/tokens`;
+    console.log('Fetching from API:', apiUrl);
+    
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('API response:', data);
+    
+    // Find USDC token in the response
+    const usdcToken = data.items?.find((token: any) => 
+      token.token?.address_hash?.toLowerCase() === USDC_BASE_ADDRESS.toLowerCase()
+    );
+    
+    console.log('Looking for USDC with address:', USDC_BASE_ADDRESS.toLowerCase());
+    console.log('Available token addresses:', data.items?.map((item: any) => item.token?.address_hash?.toLowerCase()));
+    console.log('Found USDC token:', usdcToken);
+    
+    if (usdcToken && usdcToken.value) {
+      const balance = BigInt(usdcToken.value);
+      console.log('USDC balance from API:', balance.toString());
+      console.log('USDC balance formatted:', Number(balance) / 1_000_000);
+      return balance;
+    } else {
+      console.log('USDC token not found in API response');
+      return 0n;
+    }
   } catch (error) {
-    console.warn('Failed to get USDC balance:', error);
+    console.error('Failed to get USDC balance:', error);
     return 0n;
   }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAccount } from 'wagmi';
-import { createSkaleClient, getBalances, approveEscrow } from '../service/web3';
+import { createSkaleClient, getBalances, depositTokensToEscrow } from '../service/web3';
 import { bridgeUsdcToAgent } from '../service/bridge';
 import { formatUnits, parseUnits } from 'viem';
 import type { Hex } from 'viem';
@@ -14,6 +14,9 @@ const TokensCard: React.FC = () => {
   const { address, isConnected } = useAccount();
   const [depositAmount, setDepositAmount] = React.useState('');
   const [depositLoading, setDepositLoading] = React.useState(false);
+  const [depositStep, setDepositStep] = React.useState<'idle' | 'approving' | 'transferring' | 'success'>('idle');
+  const [approvalHash, setApprovalHash] = React.useState<string | null>(null);
+  const [transferHash, setTransferHash] = React.useState<string | null>(null);
   const [depositError, setDepositError] = React.useState<string | null>(null);
   const [depositSuccess, setDepositSuccess] = React.useState(false);
   const [walletBalance, setWalletBalance] = React.useState<bigint | null>(null);
@@ -61,12 +64,38 @@ const TokensCard: React.FC = () => {
     setDepositError(null);
     setDepositLoading(true);
     setDepositSuccess(false);
+    setDepositStep('approving');
+    setApprovalHash(null);
+    setTransferHash(null);
+    
     try {
-      await approveEscrow(address as Hex, amountBigInt);
+      // Two-step deposit: 1) Approve escrow, 2) Transfer tokens to escrow
+      const result = await depositTokensToEscrow(address as Hex, amountBigInt);
+      setApprovalHash(result.approvalHash);
+      setDepositStep('transferring');
+      setTransferHash(result.depositHash);
+      
+      setDepositStep('success');
       setDepositSuccess(true);
       await loadBalances();
+      
+      // Trigger balance update in header
+      if ((window as any).triggerBalanceUpdate) {
+        (window as any).triggerBalanceUpdate();
+      }
+      
+      // Reset after a moment
+      setTimeout(() => {
+        setDepositStep('idle');
+        setDepositAmount('');
+        setApprovalHash(null);
+        setTransferHash(null);
+      }, 3000);
     } catch (e: any) {
-      setDepositError(e?.message ?? 'Failed to approve escrow');
+      setDepositError(e?.message ?? 'Deposit failed');
+      setDepositStep('idle');
+      setApprovalHash(null);
+      setTransferHash(null);
     } finally {
       setDepositLoading(false);
     }
@@ -84,6 +113,11 @@ const TokensCard: React.FC = () => {
       await bridgeUsdcToAgent(address as Hex, usdcAmount);
       setBridgeSuccess(true);
       await loadBalances();
+      
+      // Trigger balance update in header
+      if ((window as any).triggerBalanceUpdate) {
+        (window as any).triggerBalanceUpdate();
+      }
     } catch (e: any) {
       setBridgeError(e?.message ?? 'Bridge failed');
     } finally {
@@ -116,7 +150,7 @@ const TokensCard: React.FC = () => {
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-white">Deposit to escrow</h4>
           <p className="text-xs text-neutral-400">
-            You can deposit your agent tokens here. Approve escrow to spend your {tokenSymbol}; tokens stay in your wallet until tasks are created.
+            Deposit your {tokenSymbol} tokens to escrow. This will approve escrow and transfer tokens in two transactions. Once deposited, tasks can be executed without additional wallet signatures.
           </p>
           <div className="flex gap-2">
             <div className="flex-1 space-y-1">
@@ -141,12 +175,40 @@ const TokensCard: React.FC = () => {
             <p className="text-xs text-neutral-400">Available: {formatUnits(walletBalance, 18)} {tokenSymbol}</p>
           )}
           {depositError && <p className="text-xs text-red-400">{depositError}</p>}
-          {depositSuccess && <p className="text-xs text-green-400">Escrow approved successfully.</p>}
+          {depositSuccess && (
+            <div className="space-y-1">
+              <p className="text-xs text-green-400">Tokens deposited successfully. Ready for task execution.</p>
+              {approvalHash && (
+                <a
+                  href={`https://explorer.skale.network/tx/${approvalHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-neutral-400 hover:text-neutral-300 underline"
+                >
+                  View approval TX
+                </a>
+              )}
+              {transferHash && (
+                <a
+                  href={`https://explorer.skale.network/tx/${transferHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-neutral-400 hover:text-neutral-300 underline block"
+                >
+                  View deposit TX
+                </a>
+              )}
+            </div>
+          )}
           <Button
             onClick={handleDeposit}
             disabled={depositLoading || !depositAmount || parseFloat(depositAmount) <= 0}
           >
-            {depositLoading ? 'Approving…' : 'Approve escrow'}
+            {depositLoading ? (
+              depositStep === 'approving' ? 'Step 1: Approving escrow…' : depositStep === 'transferring' ? 'Step 2: Transferring tokens…' : 'Processing…'
+            ) : (
+              'Deposit to escrow'
+            )}
           </Button>
         </div>
 

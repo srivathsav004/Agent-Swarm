@@ -90,7 +90,7 @@ const Demo: React.FC = () => {
         </div>
 
         {/* Cost Estimate: full-width section below the two columns */}
-        {showEstimate && !showExecution && (
+        {showEstimate && (
           <div className="mt-8">
             <div className="bg-neutral-900 border border-neutral-800 rounded-lg shadow-sm p-6 md:p-8">
               <CostEstimate

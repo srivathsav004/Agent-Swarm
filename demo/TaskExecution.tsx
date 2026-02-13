@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAccount } from 'wagmi';
-import { createSkaleClient, createTask, getBalances, AGENT_TYPES, type AgentPipelineSelection } from '../service/web3';
-import { allocateBudget, completeAgentRequest, completeTask } from '../service/escrowApi';
+import { createSkaleClient, getBalances, AGENT_TYPES, type AgentPipelineSelection } from '../service/web3';
+import { allocateBudget, completeAgentRequest, completeTask, createTaskForClient } from '../service/escrowApi';
 import { formatUnits } from 'viem';
 import type { Hex } from 'viem';
 
@@ -101,25 +101,30 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ prompt, pipeline, totalBu
         return;
       }
 
-      // Step 2: Create task (this transfers funds to escrow using transferFrom, no new signature needed if allowance is sufficient)
+      // Step 2: Create task via server wallet using client's deposited funds
       setStep('creating');
       updateExecution('Coordinator', {
         status: 'processing',
       });
 
-      const result = await createTask(
-        address as Hex,
-        coordinator.id,
-        totalBudget,
-        `ipfs://${prompt.substring(0, 50)}`
-      );
-      
-      setTaskId(result.taskId);
-      setCreateTaskTxHash(result.txHash);
+      const result = await createTaskForClient({
+        client: address,
+        coordinatorAgentId: coordinator.id,
+        totalBudget: totalBudget.toString(),
+        taskHash: `ipfs://${prompt.substring(0, 50)}`,
+      });
+
+      const createdTaskId = result.taskId ? Number(result.taskId) : null;
+      if (!createdTaskId) {
+        throw new Error('Server did not return a taskId');
+      }
+
+      setTaskId(createdTaskId);
+      setCreateTaskTxHash((result.txHash || null) as Hex | null);
       
       // Step 3: Execute agents
       setStep('executing');
-      await executeAgents(result.taskId);
+      await executeAgents(createdTaskId);
     } catch (e: any) {
       setError(e?.message ?? 'Failed to execute task');
       setStep('checking');

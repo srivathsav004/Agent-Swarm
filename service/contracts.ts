@@ -20,7 +20,7 @@ export const SKALE_CHAIN = {
 // Deployed contract addresses (from public/app.js and apis/escrow.js)
 export const CONTRACTS = {
   AGENT_TOKEN: '0xEC307d7ae333C32b70889F0Fd61ce6f02Ee31Cf8' as Hex,
-  TASK_ESCROW: '0x7448471429d6b31A25809deffB1C6e4Ea209C4F6' as Hex,
+  TASK_ESCROW: '0x167395Fba49094c4Dde9696849457474A54E361D' as Hex,
   AGENT_REGISTRY: '0x5dB6615Be918c7d12c1342C7580BeA4a7726d6b1' as Hex,
 } as const;
 

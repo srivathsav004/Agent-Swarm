@@ -107,7 +107,7 @@ const Header: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-neutral-400 font-medium">Wallet:</span>
                   <div className="flex items-center gap-2 rounded-lg bg-neutral-900 px-3 py-1.5 border border-neutral-700 cursor-pointer hover:bg-neutral-800 transition-colors" onClick={refresh} title="Click to refresh balances">
-                    <img src="/agent-token.jpg" alt="AGENT" className="w-5 h-5 rounded-full" />
+                    <img src="/agent-token.svg" alt="AGENT" className="w-5 h-5 rounded-full" />
                     <span className="text-sm font-semibold text-white">
                       {Number(formatUnits(balances.walletToken, balances.decimals)).toFixed(0)}
                     </span>
@@ -116,17 +116,12 @@ const Header: React.FC = () => {
                 
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-neutral-400 font-medium">Escrow:</span>
-                  <button
-                    type="button"
-                    onClick={scrollToTokens}
-                    className="flex items-center gap-2 rounded-lg bg-amber-950/50 px-3 py-1.5 border border-amber-700 hover:bg-amber-900/50 transition-colors cursor-pointer"
-                    title="Deposit tokens in the Tokens panel"
-                  >
-                    <img src="/agent-token.jpg" alt="AGENT" className="w-5 h-5 rounded-full" />
-                    <span className="text-sm font-semibold text-amber-300">
+                  <div className="flex items-center gap-2 rounded-lg bg-neutral-900 px-3 py-1.5 border border-neutral-700 cursor-pointer hover:bg-neutral-800 transition-colors" onClick={scrollToTokens} title="Deposit tokens in the Tokens panel">
+                    <img src="/agent-token.svg" alt="AGENT" className="w-5 h-5 rounded-full" />
+                    <span className="text-sm font-semibold text-white">
                       {Number(formatUnits(balances.escrowBalance, balances.decimals)).toFixed(0)}
                     </span>
-                  </button>
+                  </div>
                 </div>
 
                 {usdcBalance !== null && (

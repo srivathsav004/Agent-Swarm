@@ -16,7 +16,7 @@ const CostEstimate: React.FC<CostEstimateProps> = ({ prompt, onProceed }) => {
   const [pipeline, setPipeline] = React.useState<AgentPipelineSelection | null>(null);
   const [totalBudget, setTotalBudget] = React.useState<bigint | null>(null);
   const [tokenSymbol, setTokenSymbol] = React.useState<string>('AGENT');
-  const [escrowAllowance, setEscrowAllowance] = React.useState<bigint | null>(null);
+  const [escrowBalance, setEscrowBalance] = React.useState<bigint | null>(null);
   const [walletBalance, setWalletBalance] = React.useState<bigint | null>(null);
   const [checkingFunds, setCheckingFunds] = React.useState(false);
 
@@ -52,10 +52,10 @@ const CostEstimate: React.FC<CostEstimateProps> = ({ prompt, onProceed }) => {
         const budget = calculatePipelineBudget(bestPipeline);
         setTotalBudget(budget);
 
-        // Check balances and escrow allowance
+        // Check balances and escrow balance
         setCheckingFunds(true);
         const balances = await getBalances(client, address as Hex);
-        setEscrowAllowance(balances.escrowAllowance);
+        setEscrowBalance(balances.escrowBalance);
         setWalletBalance(balances.walletToken);
         setTokenSymbol(balances.symbol);
         setCheckingFunds(false);
@@ -178,7 +178,7 @@ const CostEstimate: React.FC<CostEstimateProps> = ({ prompt, onProceed }) => {
             <div className="w-4 h-4 animate-spin rounded-full border-2 border-neutral-500 border-t-transparent" />
             <span className="text-sm text-neutral-400">Checking funds...</span>
           </div>
-        ) : escrowAllowance !== null && walletBalance !== null && (
+        ) : escrowBalance !== null && walletBalance !== null && (
           <div className="mt-4 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-neutral-400">Wallet Balance:</span>
@@ -187,13 +187,13 @@ const CostEstimate: React.FC<CostEstimateProps> = ({ prompt, onProceed }) => {
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-neutral-400">Escrow Allowance:</span>
-              <span className={`font-medium ${escrowAllowance >= totalBudget ? 'text-green-400' : 'text-red-400'}`}>
-                {formatUnits(escrowAllowance, 18)} {tokenSymbol}
+              <span className="text-neutral-400">Escrow Balance:</span>
+              <span className={`font-medium ${escrowBalance >= totalBudget ? 'text-green-400' : 'text-red-400'}`}>
+                {formatUnits(escrowBalance, 18)} {tokenSymbol}
               </span>
             </div>
             
-            {escrowAllowance >= totalBudget && walletBalance >= totalBudget ? (
+            {escrowBalance >= totalBudget ? (
               <div className="mt-6 pt-6 border-t border-neutral-700">
                 <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 mb-4">
                   <p className="text-sm text-neutral-300">
@@ -222,9 +222,9 @@ const CostEstimate: React.FC<CostEstimateProps> = ({ prompt, onProceed }) => {
                     Need {formatUnits(totalBudget - walletBalance, 18)} more {tokenSymbol} in wallet.
                   </p>
                 )}
-                {escrowAllowance < totalBudget && walletBalance >= totalBudget && (
+                {escrowBalance < totalBudget && (
                   <p className="text-sm text-neutral-400 mb-3">
-                    Need to approve escrow to spend {formatUnits(totalBudget, 18)} {tokenSymbol}.
+                    Need to deposit {formatUnits(totalBudget - escrowBalance, 18)} more {tokenSymbol} to escrow.
                   </p>
                 )}
                 <button
